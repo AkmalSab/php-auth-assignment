@@ -2,10 +2,10 @@
 
 if (isset($_POST['submitLogin'])) {
     // echo 'u click submit button';
-    if (isset($_POST['username']) && isset($_POST['exampleInputPassword1'])) {
+    if (isset($_POST['username']) && isset($_POST['password'])) {
 
         $username = $_POST['username'];
-        $password = $_POST['exampleInputPassword1'];
+        $password = $_POST['password'];
         $credential = $username . '|' . $password;
         $arr = array();
 
@@ -51,13 +51,13 @@ if (isset($_POST['submitLogin'])) {
                 <p class="card-text"></p>
                 <form action="login.php" method="POST">
                     <div class="mb-3">
-                        <label for="exampleInputEmail1" class="form-label">Email address</label>
+                        <label for="username" class="form-label">Email address</label>
                         <input type="text" class="form-control" name="username" id="username" aria-describedby="emailHelp">
                         <div id="emailHelp" class="form-text">Enter your email address.</div>
                     </div>
                     <div class="mb-3">
-                        <label for="exampleInputPassword1" class="form-label">Password</label>
-                        <input type="password" class="form-control" name="exampleInputPassword1" id="exampleInputPassword1">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" class="form-control" name="password" id="password">
                         <div id="passwordHelp" class="form-text">Enter your password.</div>
                     </div>
                     <div class="mb-3 text-center">
