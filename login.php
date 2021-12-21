@@ -1,37 +1,29 @@
 <?php
 
-if (isset($_GET['submitLogin'])) {
+if (isset($_POST['submitLogin'])) {
     // echo 'u click submit button';
-    if (isset($_GET['username']) && isset($_GET['exampleInputPassword1'])) {
+    if (isset($_POST['username']) && isset($_POST['exampleInputPassword1'])) {
 
-        $username = $_GET['username'];
-        $password = $_GET['exampleInputPassword1'];
+        $username = $_POST['username'];
+        $password = $_POST['exampleInputPassword1'];
         $credential = $username . '|' . $password;
-        echo $credential . strlen($credential) . '<br>';
+        $arr = array();
 
         // open files 
         $myfile = fopen("users.txt", "r") or die("Unable to open file!");
-
-        // reads from an open file
-        // $read = fread($myfile, filesize("users.txt"));
-
-        $arr = array();
 
         while (!feof($myfile)) {
             array_push($arr, fgets($myfile));
         }
 
-
         fclose($myfile);
-
-        // print_r($arr);
 
         foreach ($arr as $val) {
             // echo preg_replace("/\r|\n/", "", $val).'<br>';
             if ($credential === preg_replace("/\r|\n/", "", $val)) {
-                echo 'found!!';
+                header("Location: index.php");
+                exit();
             }
-            echo strlen(preg_replace("/\r|\n/", "", $val)).'<br>';
         }
     }
 }
@@ -57,7 +49,7 @@ if (isset($_GET['submitLogin'])) {
             <div class="card-body">
                 <h5 class="card-title text-center">Login</h5>
                 <p class="card-text"></p>
-                <form action="login.php" method="GET">
+                <form action="login.php" method="POST">
                     <div class="mb-3">
                         <label for="exampleInputEmail1" class="form-label">Email address</label>
                         <input type="text" class="form-control" name="username" id="username" aria-describedby="emailHelp">
