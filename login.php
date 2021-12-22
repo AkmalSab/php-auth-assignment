@@ -1,5 +1,7 @@
 <?php
 
+session_start();
+
 if (isset($_POST['submitLogin'])) {
     // echo 'u click submit button';
     if (isset($_POST['username']) && isset($_POST['password'])) {
@@ -21,6 +23,7 @@ if (isset($_POST['submitLogin'])) {
         foreach ($arr as $val) {
             // echo preg_replace("/\r|\n/", "", $val).'<br>';
             if ($credential === preg_replace("/\r|\n/", "", $val)) {
+                $_SESSION["username"] = $username;
                 header("Location: index.php");
                 exit();
             }
