@@ -1,6 +1,8 @@
 <?php
 
-session_start();
+if(!isset($_SESSION)){
+    session_start();
+}
 
 if (isset($_POST['submitLogin'])) {
     // echo 'u click submit button';
@@ -28,6 +30,8 @@ if (isset($_POST['submitLogin'])) {
                 exit();
             }
         }
+
+        echo 'user not found';
     }
 }
 ?>
@@ -60,7 +64,7 @@ if (isset($_POST['submitLogin'])) {
                     </div>
                     <div class="mb-3">
                         <label for="password" class="form-label">Password</label>
-                        <input type="password" class="form-control" name="password" id="password">
+                        <input type="text" class="form-control" name="password" id="password">
                         <div id="passwordHelp" class="form-text">Enter your password.</div>
                     </div>
                     <div class="mb-3 text-center">
