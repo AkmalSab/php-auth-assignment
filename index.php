@@ -12,8 +12,6 @@ if (!isset($_SESSION["username"])) {
 
     $sql = "
     SELECT 
-    SUM(UnitPrice * Quantity) AS total, 
-    SUM((UnitPrice * Quantity) * Discount) AS discount, 
     SUM((UnitPrice * Quantity) - (UnitPrice * Quantity) * Discount) AS final,
     COUNT(order_details.OrderID) AS orderCount    
     FROM orders join order_details on orders.OrderID = order_details.OrderID
@@ -57,30 +55,33 @@ if (!isset($_SESSION["username"])) {
 </head>
 
 <body style="background-color: #ebebe0;">
-    <div class="container">
-        <h5>index.php</h5>
-        <hr>
-        <div class="row">
+    <div class="container-fluid">
+        <div class="row mx-3">
+            <h5>index.php</h5>
+            <hr>
             <div class="col">
                 <h1>Sales Dashboard</h1>
-                <p>May 1995</p>
+                <p class="f-3" style="font-size: 24px;">May 1995</p>
             </div>
         </div>
 
-        <div class="row">
-            <div class="col bg-white border">
-                <h5>Total Sales</h5>
-                <p>$ <?php echo round($totalSales, 2); ?></p>
+        <div class="row ms-3">
+            <div class="w-25 me-3 col col-sm-12 col-md-6 p-2 bg-white border">
+                <h3>Total Sales</h3>
+                <h2>$ <?php echo round($totalSales, 2); ?></h2>
             </div>
-            <div class="col bg-white border">
-                <h5>Total Orders</h5>
-                <p><?php echo $totalOrders; ?></p>
+            <div class="w-25 col col-sm-12 col-md-6 p-2 bg-white border">
+                <h3>Total Orders</h3>
+                <h2><?php echo $totalOrders; ?></h2>
             </div>
         </div>
 
         <?php
         $sql2 = "
-        SELECT DATE(orders.OrderDate) AS OrderDate, SUM((UnitPrice * Quantity) - (UnitPrice * Quantity) * Discount) AS final, AVG((UnitPrice * Quantity) - (UnitPrice * Quantity) * Discount) AS average
+        SELECT 
+        DATE(orders.OrderDate) AS OrderDate, 
+        ROUND(SUM((UnitPrice * Quantity) - (UnitPrice * Quantity) * Discount), 2) AS final, 
+        ROUND(AVG((UnitPrice * Quantity) - (UnitPrice * Quantity) * Discount), 2) AS average
         FROM orders join order_details on orders.OrderID = order_details.OrderID
         WHERE  EXTRACT(MONTH FROM orders.OrderDate) = 05
         AND EXTRACT(YEAR FROM orders.OrderDate) = 1995
@@ -106,50 +107,19 @@ if (!isset($_SESSION["username"])) {
         // close connection
         // $conn->close();
         ?>
-        <div class="row mt-3">
+        <div class="row mx-3 mt-3">
             <div class="col bg-white border">
                 <h1>Daily Sales</h1>
-                <div id="chart_div" style="width: 900px; height: 500px;"></div>
+                <div id="chart_div" style="width: inherit; height: 500px;"></div>
             </div>
         </div>
-
-        <?php
-        $sql3 = "
-        SELECT DATE(orders.OrderDate) AS OrderDate, SUM((UnitPrice * Quantity) - (UnitPrice * Quantity) * Discount) AS final, AVG((UnitPrice * Quantity) - (UnitPrice * Quantity) * Discount) AS average
-        FROM orders join order_details on orders.OrderID = order_details.OrderID
-        WHERE  EXTRACT(MONTH FROM orders.OrderDate) = 05
-        AND EXTRACT(YEAR FROM orders.OrderDate) = 1995
-        GROUP BY orders.OrderDate;
-        ";
-
-        $result3 = $conn->query($sql3);
-
-        $dateArr = array();
-
-        // Fetch all
-        while ($row = $result3->fetch_assoc()) {
-            array_push($dateArr, [
-                $row["OrderDate"],
-                $row["final"],
-                $row["average"]
-            ]);
-        }
-
-        // Free result set
-        $result3->free_result();
-
-        // close connection
-        // $conn->close();
-        ?>
-        <div class="row mt-3">
+        
+        <div class="row mx-3 mt-3">
             <?php
             $sql4 = "
                 SELECT 
-                categories.CategoryID,
                 categories.CategoryName,
-                DATE(orders.OrderDate) AS OrderDate, 
-                SUM((order_details.UnitPrice * order_details.Quantity) - (order_details.UnitPrice * order_details.Quantity) * Discount) AS final, 
-                AVG((order_details.UnitPrice * order_details.Quantity) - (order_details.UnitPrice * order_details.Quantity) * Discount) AS average
+                ROUND(SUM((order_details.UnitPrice * order_details.Quantity) - (order_details.UnitPrice * order_details.Quantity) * Discount), 2) AS final
                 FROM categories JOIN products ON categories.CategoryID = products.CategoryID
                 JOIN order_details ON products.ProductID = order_details.ProductID
                 JOIN orders ON orders.OrderID = order_details.OrderID
@@ -177,17 +147,14 @@ if (!isset($_SESSION["username"])) {
             // $conn->close();
             ?>
             <div class="col bg-white border">
-                <h1>Sales by Product Categories</h1>
-                <div id="piechart_3d" style="width: auto; height: auto;"></div>
+                <h2 class="text-center">Sales by Product Categories</h2>
+                <div id="piechart_3d" style="width: inherit; height: 500px;"></div>
             </div>
             <?php
             $sql5 = "
-                SELECT 
-                customers.CustomerID,
+                SELECT             
                 customers.ContactName,
-                DATE(orders.OrderDate) AS OrderDate, 
-                SUM((order_details.UnitPrice * order_details.Quantity) - (order_details.UnitPrice * order_details.Quantity) * Discount) AS final, 
-                AVG((order_details.UnitPrice * order_details.Quantity) - (order_details.UnitPrice * order_details.Quantity) * Discount) AS average
+                ROUND(SUM((order_details.UnitPrice * order_details.Quantity) - (order_details.UnitPrice * order_details.Quantity) * Discount), 2) AS final
                 FROM customers JOIN orders ON customers.CustomerID = orders.CustomerID
                 JOIN order_details ON orders.OrderID = order_details.OrderID
                 WHERE EXTRACT(MONTH FROM orders.OrderDate) = 05
@@ -214,24 +181,20 @@ if (!isset($_SESSION["username"])) {
             // $conn->close();
             ?>
             <div class="col bg-white border">
-                <h1>Sales by Customers</h1>
-                <div id="top_x_div" style="width: 900px; height: 500px;"></div>
+                <h2 class="text-center">Sales by Customers</h2>
+                <div id="top_x_div" style="width: inherit; height: 500px;"></div>
             </div>
             <?php
             $sql6 = "
                 SELECT 
-                employees.EmployeeID,
                 employees.FirstName,
-                employees.LastName,
-                DATE(orders.OrderDate) AS OrderDate, 
-                SUM((order_details.UnitPrice * order_details.Quantity) - (order_details.UnitPrice * order_details.Quantity) * Discount) AS final, 
-                AVG((order_details.UnitPrice * order_details.Quantity) - (order_details.UnitPrice * order_details.Quantity) * Discount) AS average
+                ROUND(SUM((order_details.UnitPrice * order_details.Quantity) - (order_details.UnitPrice * order_details.Quantity) * Discount), 2) AS final
                 FROM employees JOIN orders ON employees.EmployeeID = orders.EmployeeID
                 JOIN order_details ON orders.OrderID = order_details.OrderID
                 WHERE EXTRACT(MONTH FROM orders.OrderDate) = 05
                 AND EXTRACT(YEAR FROM orders.OrderDate) = 1995
                 GROUP BY employees.EmployeeID;
-                ";
+            ";
 
             $result6 = $conn->query($sql6);
 
@@ -252,8 +215,8 @@ if (!isset($_SESSION["username"])) {
             $conn->close();
             ?>
             <div class="col bg-white border">
-                <h1>Sales by Employees</h1>
-                <div id="top_x_div_2" style="width: 900px; height: 500px;"></div>
+                <h2 class="text-center">Sales by Employees</h2>
+                <div id="top_x_div_2" style="width: inherit; height: 500px;"></div>
             </div>
         </div>
     </div>
@@ -275,11 +238,17 @@ if (!isset($_SESSION["username"])) {
         ];
 
         date.forEach(myFunction);
-
         function myFunction(item, index) {
-            // console.log(item[0],parseInt(item[1]),parseInt(item[2]));
-            value.push([item[0], parseFloat(item[1]), parseFloat(item[2])]);
+            value.push(
+                [
+                    item[0], 
+                    parseFloat(item[1]), 
+                    parseFloat(item[2])
+                ]
+            );
         }
+
+        // console.log(date);
 
         // console.log(value);
         var data = google.visualization.arrayToDataTable(value);
@@ -326,6 +295,7 @@ if (!isset($_SESSION["username"])) {
         var data = google.visualization.arrayToDataTable(value2);
 
         var options = {
+
             is3D: true,
         };
 
@@ -340,12 +310,13 @@ if (!isset($_SESSION["username"])) {
     google.charts.setOnLoadCallback(drawStuff);
 
     var customer = [
-        ['Opening Move', 'Percentage'],
+        ['Customers', 'Total Sales'],
     ];
 
     var custData = <?php echo json_encode($customerArr, JSON_HEX_TAG); ?>;
 
     custData.forEach(myFunction3)
+
     function myFunction3(item, index) {
         customer.push([item[0], parseFloat(item[1])]);
     }
@@ -354,21 +325,16 @@ if (!isset($_SESSION["username"])) {
         var data = new google.visualization.arrayToDataTable(customer);
 
         var options = {
-            title: 'Chess opening moves',
             width: 900,
             legend: {
                 position: 'none'
-            },
-            chart: {
-                title: 'Chess opening moves',
-                subtitle: 'popularity by percentage'
-            },
+            },          
             bars: 'horizontal', // Required for Material Bar Charts.
             axes: {
                 x: {
                     0: {
                         side: 'top',
-                        label: 'Percentage'
+                        label: 'Total Sales'
                     } // Top x-axis.
                 }
             },
@@ -388,14 +354,14 @@ if (!isset($_SESSION["username"])) {
     google.charts.setOnLoadCallback(drawStuff2);
 
     var employee = [
-        ['Opening Move', 'Percentage'],
+        ['Employees', 'Total Sales'],
     ];
 
     var empData = <?php echo json_encode($employeeArr, JSON_HEX_TAG); ?>;
 
-    console.log(empData);
 
     empData.forEach(myFunction4)
+
     function myFunction4(item, index) {
         employee.push([item[0], parseFloat(item[1])]);
     }
@@ -404,21 +370,16 @@ if (!isset($_SESSION["username"])) {
         var data = new google.visualization.arrayToDataTable(employee);
 
         var options = {
-            title: 'Chess opening moves',
             width: 900,
             legend: {
                 position: 'none'
-            },
-            chart: {
-                title: 'Chess opening moves',
-                subtitle: 'popularity by percentage'
             },
             bars: 'horizontal', // Required for Material Bar Charts.
             axes: {
                 x: {
                     0: {
                         side: 'top',
-                        label: 'Percentage'
+                        label: 'Total Sales'
                     } // Top x-axis.
                 }
             },
