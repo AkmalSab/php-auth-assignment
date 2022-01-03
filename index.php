@@ -104,7 +104,7 @@ if (!isset($_SESSION["username"])) {
         $result2->free_result();
 
         // close connection
-        $conn->close();
+        // $conn->close();
         ?>
         <div class="row mt-3">
             <div class="col bg-white border">
@@ -139,18 +139,121 @@ if (!isset($_SESSION["username"])) {
         $result3->free_result();
 
         // close connection
-        $conn->close();
+        // $conn->close();
         ?>
         <div class="row mt-3">
+            <?php
+            $sql4 = "
+                SELECT 
+                categories.CategoryID,
+                categories.CategoryName,
+                DATE(orders.OrderDate) AS OrderDate, 
+                SUM((order_details.UnitPrice * order_details.Quantity) - (order_details.UnitPrice * order_details.Quantity) * Discount) AS final, 
+                AVG((order_details.UnitPrice * order_details.Quantity) - (order_details.UnitPrice * order_details.Quantity) * Discount) AS average
+                FROM categories JOIN products ON categories.CategoryID = products.CategoryID
+                JOIN order_details ON products.ProductID = order_details.ProductID
+                JOIN orders ON orders.OrderID = order_details.OrderID
+                WHERE EXTRACT(MONTH FROM orders.OrderDate) = 05
+                AND EXTRACT(YEAR FROM orders.OrderDate) = 1995
+                GROUP BY categories.CategoryID;
+                ";
+
+            $result4 = $conn->query($sql4);
+
+            $categoryArr = array();
+
+            // Fetch all
+            while ($row = $result4->fetch_assoc()) {
+                array_push($categoryArr, [
+                    $row["CategoryName"],
+                    $row["final"],
+                ]);
+            }
+
+            // Free result set
+            $result4->free_result();
+
+            // close connection
+            // $conn->close();
+            ?>
             <div class="col bg-white border">
                 <h1>Sales by Product Categories</h1>
-                <div id="piechart_3d" style="width: auto; height: 500px;"></div>
+                <div id="piechart_3d" style="width: auto; height: auto;"></div>
             </div>
+            <?php
+            $sql5 = "
+                SELECT 
+                customers.CustomerID,
+                customers.ContactName,
+                DATE(orders.OrderDate) AS OrderDate, 
+                SUM((order_details.UnitPrice * order_details.Quantity) - (order_details.UnitPrice * order_details.Quantity) * Discount) AS final, 
+                AVG((order_details.UnitPrice * order_details.Quantity) - (order_details.UnitPrice * order_details.Quantity) * Discount) AS average
+                FROM customers JOIN orders ON customers.CustomerID = orders.CustomerID
+                JOIN order_details ON orders.OrderID = order_details.OrderID
+                WHERE EXTRACT(MONTH FROM orders.OrderDate) = 05
+                AND EXTRACT(YEAR FROM orders.OrderDate) = 1995
+                GROUP BY customers.ContactName;
+                ";
+
+            $result5 = $conn->query($sql5);
+
+            $customerArr = array();
+
+            // Fetch all
+            while ($row = $result5->fetch_assoc()) {
+                array_push($customerArr, [
+                    $row["ContactName"],
+                    $row["final"],
+                ]);
+            }
+
+            // Free result set
+            $result5->free_result();
+
+            // close connection
+            // $conn->close();
+            ?>
             <div class="col bg-white border">
                 <h1>Sales by Customers</h1>
+                <div id="top_x_div" style="width: 900px; height: 500px;"></div>
             </div>
+            <?php
+            $sql6 = "
+                SELECT 
+                employees.EmployeeID,
+                employees.FirstName,
+                employees.LastName,
+                DATE(orders.OrderDate) AS OrderDate, 
+                SUM((order_details.UnitPrice * order_details.Quantity) - (order_details.UnitPrice * order_details.Quantity) * Discount) AS final, 
+                AVG((order_details.UnitPrice * order_details.Quantity) - (order_details.UnitPrice * order_details.Quantity) * Discount) AS average
+                FROM employees JOIN orders ON employees.EmployeeID = orders.EmployeeID
+                JOIN order_details ON orders.OrderID = order_details.OrderID
+                WHERE EXTRACT(MONTH FROM orders.OrderDate) = 05
+                AND EXTRACT(YEAR FROM orders.OrderDate) = 1995
+                GROUP BY employees.EmployeeID;
+                ";
+
+            $result6 = $conn->query($sql6);
+
+            $employeeArr = array();
+
+            // Fetch all
+            while ($row = $result6->fetch_assoc()) {
+                array_push($employeeArr, [
+                    $row["FirstName"],
+                    $row["final"],
+                ]);
+            }
+
+            // Free result set
+            $result6->free_result();
+
+            // close connection
+            $conn->close();
+            ?>
             <div class="col bg-white border">
                 <h1>Sales by Employees</h1>
+                <div id="top_x_div_2" style="width: 900px; height: 500px;"></div>
             </div>
         </div>
     </div>
@@ -160,6 +263,7 @@ if (!isset($_SESSION["username"])) {
     google.charts.load('current', {
         'packages': ['corechart']
     });
+
     google.charts.setOnLoadCallback(drawVisualization);
 
     function drawVisualization() {
@@ -201,21 +305,28 @@ if (!isset($_SESSION["username"])) {
     }
 
     // Sales by Product Categories chart
-    google.charts.load("current", {packages:["corechart"]});
-      google.charts.setOnLoadCallback(drawChart);
-      function drawChart() {
-        var data = google.visualization.arrayToDataTable([
-          ['Task', 'Hours per Day'],
-          ['Work',     11],
-          ['Eat',      2],
-          ['Commute',  2],
-          ['Watch TV', 2],
-          ['Sleep',    7]
-        ]);
+    google.charts.load("current", {
+        packages: ["corechart"]
+    });
+    google.charts.setOnLoadCallback(drawChart);
+
+    var category = <?php echo json_encode($categoryArr, JSON_HEX_TAG); ?>;
+
+    const value2 = [
+        ['Task', 'Hours per Day'],
+    ];
+
+    category.forEach(myFunction2)
+
+    function myFunction2(item, index) {
+        value2.push([item[0], parseFloat(item[1])]);
+    }
+
+    function drawChart() {
+        var data = google.visualization.arrayToDataTable(value2);
 
         var options = {
-          title: 'My Daily Activities',
-          is3D: true,
+            is3D: true,
         };
 
         var chart = new google.visualization.PieChart(document.getElementById('piechart_3d'));
@@ -223,7 +334,102 @@ if (!isset($_SESSION["username"])) {
     }
 
     // Sales by Customers chart
+    google.charts.load('current', {
+        'packages': ['bar']
+    });
+    google.charts.setOnLoadCallback(drawStuff);
+
+    var customer = [
+        ['Opening Move', 'Percentage'],
+    ];
+
+    var custData = <?php echo json_encode($customerArr, JSON_HEX_TAG); ?>;
+
+    custData.forEach(myFunction3)
+    function myFunction3(item, index) {
+        customer.push([item[0], parseFloat(item[1])]);
+    }
+
+    function drawStuff() {
+        var data = new google.visualization.arrayToDataTable(customer);
+
+        var options = {
+            title: 'Chess opening moves',
+            width: 900,
+            legend: {
+                position: 'none'
+            },
+            chart: {
+                title: 'Chess opening moves',
+                subtitle: 'popularity by percentage'
+            },
+            bars: 'horizontal', // Required for Material Bar Charts.
+            axes: {
+                x: {
+                    0: {
+                        side: 'top',
+                        label: 'Percentage'
+                    } // Top x-axis.
+                }
+            },
+            bar: {
+                groupWidth: "90%"
+            }
+        };
+
+        var chart = new google.charts.Bar(document.getElementById('top_x_div'));
+        chart.draw(data, options);
+    };
+
     // Sales by Employee chart
+    google.charts.load('current', {
+        'packages': ['bar']
+    });
+    google.charts.setOnLoadCallback(drawStuff2);
+
+    var employee = [
+        ['Opening Move', 'Percentage'],
+    ];
+
+    var empData = <?php echo json_encode($employeeArr, JSON_HEX_TAG); ?>;
+
+    console.log(empData);
+
+    empData.forEach(myFunction4)
+    function myFunction4(item, index) {
+        employee.push([item[0], parseFloat(item[1])]);
+    }
+
+    function drawStuff2() {
+        var data = new google.visualization.arrayToDataTable(employee);
+
+        var options = {
+            title: 'Chess opening moves',
+            width: 900,
+            legend: {
+                position: 'none'
+            },
+            chart: {
+                title: 'Chess opening moves',
+                subtitle: 'popularity by percentage'
+            },
+            bars: 'horizontal', // Required for Material Bar Charts.
+            axes: {
+                x: {
+                    0: {
+                        side: 'top',
+                        label: 'Percentage'
+                    } // Top x-axis.
+                }
+            },
+            bar: {
+                groupWidth: "90%"
+            }
+        };
+
+        var chart = new google.charts.Bar(document.getElementById('top_x_div_2'));
+        chart.draw(data, options);
+    };
 </script>
 
 </html>
